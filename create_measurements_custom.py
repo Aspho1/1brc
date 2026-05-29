@@ -11,7 +11,7 @@ def get_locations() -> list[bytes]:
     with open('weather_stations.csv', 'r+b') as f:
         for line in f.readlines(): #b'\n'
             si = line.find(b';')
-            locations.append(line[:si])
+            locations.append(line[:si].decode(encoding='utf-8',errors='ignore'))
     return locations
 
 def generate_and_write_sample_data(args) -> None:
@@ -31,18 +31,11 @@ def main():
     N = 1_000_000_000
     k = 1_000_000
 
-
     import os
     pool = Pool(processes=os.cpu_count())
     pool.map(generate_and_write_sample_data, [(locations,k) for _ in range(N//k)])
-    # generate_and_write_sample_data()
-
-
-
-    # write_new_measurements(locations)
-
-
-    
+    pool.close()
+    pool.join()
 
 if __name__ == '__main__':
     # cProfile.run('main()')
