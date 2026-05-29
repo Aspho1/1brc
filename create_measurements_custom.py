@@ -38,9 +38,7 @@ def generate_and_write_sample_data(args) -> int:
 
 def main():
     locations = get_locations()
-    # Write a million datapoints per function call. 
     N = 1_000_000_000
-    # k = 1_000_000
     cpus = os.cpu_count()
     k = N // (cpus*2)
 
