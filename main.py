@@ -1,25 +1,16 @@
 from multiprocessing import Pool
-# from multiprocessing
-import sys
 import time
-import cProfile
-# from typing import 
-
-import pstats
-from pstats import SortKey
-import io
 import os
-
 import gc
-d: dict[bytes, list] = dict() # min, max, sum, count
 
-def _process_chunk(args):
+
+def _process_chunk(args:tuple[int,int,str]) -> dict[bytes,list[int|float]]:
     start, end, filename = args
-    local = {}
+    local: dict[bytes,list[int|float]] = {}
     with open(filename, 'rb') as f:
         f.seek(start)
         gc.disable()
-        for line in f.read(end - start).split(b'\n'):
+        for line in f.read(size=(end - start)).split(b'\n'):
             if not line:
                 continue
             si = line.find(b';')
@@ -36,32 +27,20 @@ def _process_chunk(args):
                 _local[3] += 1
             except KeyError:
                 local[loc] = [temperature, temperature, temperature, 1]
-
-
-            # if loc in local:
-            #     v = local[loc]
-            #     if temperature < v[0]:
-            #         v[0] = temperature
-            #     if temperature > v[1]:
-            #         v[1] = temperature
-            #     v[2] += temperature
-            #     v[3] += 1
-            # else:
-            #     local[loc] = [temperature, temperature, temperature, 1]
         gc.enable()
     return local
 
 
 
 
-def main(cpu_count = os.cpu_count(), target_filename = 'measurements.csv', peek_dist = 25 ):
+def generate_marching_orders(target_filename:str, cpu_count:int) -> list[tuple[int,int,str]]:
 
     file_size = os.path.getsize(target_filename)
     step = max(2**22, file_size // (cpu_count * 2))
     n_steps = file_size // step
     
     print(f'USING {n_steps} CHUNKS and {cpu_count} CPUs')
-    chunks = []
+    chunks: list[tuple[int,int,str]] = []
     with open(target_filename, mode='r+b') as f:
 
         def is_new_line(pos:int):
@@ -87,6 +66,13 @@ def main(cpu_count = os.cpu_count(), target_filename = 'measurements.csv', peek_
 
             chunks.append((chunk_start, chunk_end, target_filename))
             chunk_start = chunk_end
+    
+    return chunks
+
+
+def march(chunks:list[tuple[int,int,str]], cpu_count:int):
+
+    d: dict[bytes, list[float | int]] = dict() # min, max, sum, count
 
     with Pool(cpu_count) as pool:
         for partial in pool.imap_unordered(_process_chunk, chunks):
@@ -102,9 +88,9 @@ def main(cpu_count = os.cpu_count(), target_filename = 'measurements.csv', peek_
                 else:
                     d[loc] = v
 
-    printd()
+    return d
 
-def printd():
+def printd(d:dict[bytes, list[float | int]]):
     print("{",end="")
 
     while len(d) >= 2:
@@ -116,28 +102,15 @@ def printd():
     print(f'{k}={vs[0]:.1f}/{vs[2]/vs[3]:.1f}/{vs[1]:.1f}',end='')
     print("}")
 
+def main():
+
+    cpu_count = os.cpu_count() or 1
+    chunks = generate_marching_orders(target_filename='measurements.csv', cpu_count=cpu_count)
+    results = march(chunks=chunks, cpu_count=cpu_count)
+    printd(results)
 
 
-
-# 249.645 seconds on 5 CPUs
-# 50.493 seconds on 32 CPUs (128 chunks)
-# 53.776 seconds on 64 CPUs (128 chunks)
 if __name__ == "__main__":
-
-    # ob = cProfile.Profile()
-
-    # define_chunks()
-
-    # ob.enable()
-    # ob.disable()
-    # sec = io.StringIO()
-
-    # sortby = SortKey.TIME
-    # ps = pstats.Stats(ob, stream=sec).sort_stats(sortby)
-    # ps.print_stats()
-
-    # print(sec.getvalue())
-
     start = time.time_ns()
     main()
     end = time.time_ns()
