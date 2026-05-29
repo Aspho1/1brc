@@ -8,4 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# No 15 Gb datafile. Make it yerself. 
 measurements.csv
