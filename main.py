@@ -36,7 +36,7 @@ def _process_chunk(args):
                 local[loc] = [temp, temp, temp, 1]
     return local
 
-def main(cpu_count = os.cpu_count(), target_filename = 'measurements.csv', peek_dist = 25 ):
+def main(cpu_count = os.cpu_count(), target_filename = 'measurements_gauss.csv', peek_dist = 25 ):
 
     file_size = os.path.getsize(target_filename)
     step = max(2**22, file_size // (cpu_count * 2))
