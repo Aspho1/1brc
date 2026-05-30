@@ -1,5 +1,7 @@
 # 1BRC
 
+## Python
+
 There are 1 billion rows. Python. No external deps. 
 
 As of writing this `pypy` supports python 3.11. Using pypy over cpython is an easy 15-50% reduced computation time (43s to 30s with the current setup). Could probably use JIT computations in the hot loop but that might count as an external package.
@@ -30,3 +32,8 @@ As of writing this `pypy` supports python 3.11. Using pypy over cpython is an ea
     ```sh
     uv run parse_and_compute.py
     ```
+
+
+## Julia
+
+Always a pleasure to code in this language. Without much optimization down to 41 seconds. Still want to see if I can minimize decoding in the hotloop, read floats faster...  

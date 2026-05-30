@@ -57,6 +57,7 @@ def generate_marching_orders(target_filename:str, cpu_count:int) -> list[tuple[i
             while not is_new_line(chunk_end):
                 chunk_end -= 1
 
+            # What if chunk start is just less than fs ** using `//` to compute step--will always be a little less.   
             if chunk_start == chunk_end:
                 chunk_end = next_line(chunk_end)
 

@@ -9,7 +9,7 @@ HOTTEST_TEMP =  99.9
 def get_locations() -> list[bytes]:
     locations:dict[bytes, float] = {}
 
-    with open('weather_stations.csv', 'r+b') as f:
+    with open('data/weather_stations.csv', 'r+b') as f:
         for line in f.readlines(): #b'\n'
             si = line.find(b';')
             loc = line[:si].decode(encoding='utf-8',errors='ignore')
