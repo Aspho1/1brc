@@ -1,4 +1,4 @@
-import cProfile
+# import cProfile
 import random
 from multiprocessing import Pool
 import os
@@ -20,7 +20,7 @@ def get_locations() -> list[bytes]:
     return locations
 
 def generate_and_write_sample_data(args) -> int:
-    locations, k = args[0], args[1]
+    locations, k, fp = args[0], args[1], args[2]
     out_str = ''
     sampled_locations = random.choices(list(locations.keys()),k=k)
 
@@ -32,21 +32,23 @@ def generate_and_write_sample_data(args) -> int:
         x = min(max(random.normalvariate(mu=locations[station], sigma=sd), -99.9) ,99.9)
         out_str += f"{station};{x:.1f}\n" 
 
-    with open('measurements.csv', 'a',encoding='utf-8') as f:
+    with open(fp, 'a',encoding='utf-8') as f:
         f.write(out_str)
     return 0
 
-def main():
+def create_measurement_file(fp:str = 'data/measurements.csv'):
+
+    if os.path.exists(fp):
+        os.remove(fp)
     locations = get_locations()
     N = 1_000_000_000
     cpus = os.cpu_count()
     k = N // (cpus*2)
 
     with Pool(processes=cpus) as pool:
-        for r in pool.imap_unordered(generate_and_write_sample_data, [(locations,k) for _ in range(N//k)]):
+        for r in pool.imap_unordered(generate_and_write_sample_data, [(locations, k, fp) for _ in range(N//k)]):
             if r > 0:
                 print("ERROR")
 
 if __name__ == '__main__':
-    # cProfile.run('main()')
-    main()
+    create_measurement_file()

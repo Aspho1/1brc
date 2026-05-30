@@ -1,8 +1,8 @@
 from multiprocessing import Pool
-import time
 import os
 import gc
 
+from utils import timer_func, printd
 
 def _process_chunk(args:tuple[int,int,str]) -> dict[bytes,list[int|float]]:
     start, end, filename = args
@@ -10,7 +10,7 @@ def _process_chunk(args:tuple[int,int,str]) -> dict[bytes,list[int|float]]:
     with open(filename, 'rb') as f:
         f.seek(start)
         gc.disable()
-        for line in f.read(size=(end - start)).split(b'\n'):
+        for line in f.read((end - start)).split(b'\n'):
             if not line:
                 continue
             si = line.find(b';')
@@ -30,11 +30,7 @@ def _process_chunk(args:tuple[int,int,str]) -> dict[bytes,list[int|float]]:
         gc.enable()
     return local
 
-
-
-
 def generate_marching_orders(target_filename:str, cpu_count:int) -> list[tuple[int,int,str]]:
-
     file_size = os.path.getsize(target_filename)
     step = max(2**22, file_size // (cpu_count * 2))
     n_steps = file_size // step
@@ -71,7 +67,6 @@ def generate_marching_orders(target_filename:str, cpu_count:int) -> list[tuple[i
 
 
 def march(chunks:list[tuple[int,int,str]], cpu_count:int):
-
     d: dict[bytes, list[float | int]] = dict() # min, max, sum, count
 
     with Pool(cpu_count) as pool:
@@ -87,33 +82,17 @@ def march(chunks:list[tuple[int,int,str]], cpu_count:int):
                     _d[3] += v[3]
                 else:
                     d[loc] = v
-
     return d
 
-def printd(d:dict[bytes, list[float | int]]):
-    print("{",end="")
 
-    while len(d) >= 2:
-        (k, vs) = d.popitem()
-        k = k.decode('utf-8')
-        print(f'{k}={vs[0]:.1f}/{vs[2]/vs[3]:.1f}/{vs[1]:.1f}, ',end='')
-    k, vs = d.popitem()
-    k = k.decode('utf-8')
-    print(f'{k}={vs[0]:.1f}/{vs[2]/vs[3]:.1f}/{vs[1]:.1f}',end='')
-    print("}")
-
-def main():
-
+@timer_func
+def run() -> None:
     cpu_count = os.cpu_count() or 1
-    chunks = generate_marching_orders(target_filename='measurements.csv', cpu_count=cpu_count)
-    results = march(chunks=chunks, cpu_count=cpu_count)
-    printd(results)
+    chunks = generate_marching_orders(target_filename='data/measurements.csv', cpu_count=cpu_count)
+    res = march(chunks=chunks, cpu_count=cpu_count)
+    printd(res)
 
 
-if __name__ == "__main__":
-    start = time.time_ns()
-    main()
-    end = time.time_ns()
 
-    print(f'Execution took {(end-start)/1e9:.2f} seconds')
-
+if __name__ == '__main__':
+    run()

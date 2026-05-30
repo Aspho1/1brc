@@ -8,6 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+uv.lock
+
 
 # No 15 Gb datafile. Make it yerself. 
 measurements.csv
